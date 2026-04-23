@@ -1,0 +1,38 @@
+# Server
+
+# Versioning and metadata
+
+server/.git
+server/.gitignore
+server/.dockerignore
+
+# Build dependencies
+
+server/dist
+server/node_modules
+server/coverage
+
+# Environment (contains sensitive data)
+
+server/.env
+server/.env.\*
+
+# Files not required for production
+
+server/.editorconfig
+server/Dockerfile
+server/README.md
+server/.eslintrc.js
+server/nodemon.json
+server/docker-compose.yml
+server/.prettierrc
+server/.temp
+
+# Client
+
+client/.next
+client/node_modules
+client/.gitignore
+client/README.md
+client/out
+client/.env
