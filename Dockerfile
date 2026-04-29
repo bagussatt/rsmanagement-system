@@ -12,8 +12,8 @@ COPY server/pnpm-lock.yaml /app
 
 RUN npm install -g pnpm && pnpm install --frozen-lockfile
 COPY server /app
-ENV NODE_ENV=production
-ENV DATABASE_URL="mysql://user:password@localhost:3306/database"
+ENV NODE_ENV=development
+ENV DATABASE_URL="postgresql://user:password@postgres:5432/mydb"
 
 RUN pnpm run prisma:generate && pnpm build
 RUN pnpm prune --prod
@@ -55,7 +55,7 @@ COPY --from=client-build /app/out /app/public
 ARG GITHUB_URL
 LABEL org.opencontainers.image.source=$GITHUB_URL
 
-ENV NODE_ENV=production
+ENV NODE_ENV=development
 EXPOSE 3000
 # This command starts the Node.js application using the built server code
 CMD ["node", "dist/main.js"]

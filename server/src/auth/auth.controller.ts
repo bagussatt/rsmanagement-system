@@ -7,22 +7,19 @@ import {
   Post,
   Request,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOkResponse } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiCreatedResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { Role } from '@prisma/client';
 import { ReqUser } from 'src/interface/request';
 import { Public, SetRoles } from './auth.metadata';
 import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login';
+import { RegisterDto } from './dto/register.dto';
 
+@ApiTags('auth') 
 @Controller('auth')
 export class AuthController {
-  constructor(private authService: AuthService) {}
-
-  /**
-   *  User login
-   *
-   * @param signInDto - The login credentials
-   */
+  constructor(private authService: AuthService) { }
+  
   @Public()
   @HttpCode(HttpStatus.OK)
   @Post('login')
@@ -38,10 +35,27 @@ export class AuthController {
   signIn(@Body() signInDto: LoginDto) {
     return this.authService.signIn(signInDto.username, signInDto.password);
   }
+  @Public() 
+  @Post('register')
+  @ApiCreatedResponse({
+    description: 'User successfully registered',
+    schema: {
+      type: 'object',
+      properties: {
+        id: { type: 'string' },
+        name: { type: 'string' },
+        username: { type: 'string' },
+        role: { type: 'string' },
+        specialization: { type: 'string' },
+        sip: { type: 'string' },
+        phone: { type: 'string' },
+      },
+    },
+  })
+  async register(@Body() dto: RegisterDto) {
+    return this.authService.register(dto);
+  }
 
-  /**
-   *  Refresh access token
-   */
   @Post('refresh')
   @ApiBearerAuth()
   @ApiOkResponse({
@@ -57,12 +71,10 @@ export class AuthController {
     return this.authService.refresh(req.user.sub);
   }
 
-  /**
-   *  Get user profile
-   */
+  
   @Get('me')
   @ApiBearerAuth()
-  @SetRoles(Role.ADMIN)
+  
   @ApiOkResponse({
     description: 'User Profile',
     schema: {

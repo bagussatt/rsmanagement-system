@@ -1,6 +1,6 @@
 services:
   postgres:
-    image: postgres:17-alpine
+    image: postgres:17
     container_name: rsmanagement-postgres
     restart: unless-stopped
     environment:
@@ -28,24 +28,7 @@ services:
       ADMINER_DEFAULT_SERVER: postgres
       ADMINER_DESIGN: nette
     depends_on:
-      postgres:
-        condition: service_healthy
-
-  app:
-    build:
-      context: ..
-      dockerfile: Dockerfile
-    container_name: rsmanagement-app
-    restart: unless-stopped
-    ports:
-      - "3000:3000"
-    environment:
-      DATABASE_URL: postgresql://user:password@postgres:5432/mydb
-      NODE_ENV: development
-    depends_on:
-      postgres:
-        condition: service_healthy
-    working_dir: /app
+      - postgres
 
 volumes:
   postgres_data:

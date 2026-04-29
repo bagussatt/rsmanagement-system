@@ -6,19 +6,120 @@ generator client {
   binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
 }
 
+datasource db {
+  provider = "postgresql"
+}
+
 enum Role {
-  USER
+  DOKTER
+  PERAWAT
+  BIDAN
+  AHLI_GIZI
+  APOTEKER
+  FISIOTERAPIS
   ADMIN
 }
 
-datasource db {
-  provider = "mysql"
+model User {
+  id             String  @id @default(cuid())
+  name           String
+  username       String  @unique
+  password       String
+  role           Role
+  specialization String?
+  sip            String? @unique
+  phone          String?
+
+  cpptEntries   Cppt[]          @relation("AuthorRelation")
+  verifiedCppts Cppt[]          @relation("VerifierRelation")
+  resumes       MedicalResume[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
 
-model User {
-  id       String @id @default(cuid())
-  name     String
-  username String @unique
-  password String
-  role     Role   @default(USER)
+model Patient {
+  id                  String   @id @default(cuid())
+  medicalRecordNumber String   @unique
+  name                String
+  birthDate           DateTime
+  gender              String
+  address             String?
+  phone               String?
+
+  visits      Visit[]
+  cpptEntries Cppt[]
+  resumes     MedicalResume[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Visit {
+  id        String  @id @default(cuid())
+  patientId String
+  patient   Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  checkInAt  DateTime  @default(now())
+  checkOutAt DateTime?
+  status     String
+
+  cpptEntries   Cppt[]
+  medicalResume MedicalResume?
+}
+
+model Cppt {
+  id        String  @id @default(cuid())
+
+  visitId   String
+  visit     Visit   @relation(fields: [visitId], references: [id], onDelete: Cascade)
+
+  authorId String
+  author   User   @relation("AuthorRelation", fields: [authorId], references: [id], onDelete: Restrict)
+
+  patientId String
+  patient   Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  subjective  String
+  objective   String
+  assessment  String
+  plan        String
+  instruction String?
+
+  isVerified   Boolean   @default(false)
+  verifiedById String?
+  verifiedBy   User?     @relation("VerifierRelation", fields: [verifiedById], references: [id], onDelete: SetNull)
+  verifiedAt   DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model MedicalResume {
+  id      String @id @default(cuid())
+
+  visitId String @unique
+  visit   Visit  @relation(fields: [visitId], references: [id], onDelete: Cascade)
+
+  patientId String
+  patient   Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  admissionReason   String
+  clinicalSummary   String
+  diagnosticResults String
+
+  mainDiagnosis      String
+  secondaryDiagnoses String?
+  procedures         String?
+
+  drugsDuringStay String
+  homeMedications String
+  prognosis       String
+  followUpPlan    String
+
+  doctorInChargeId String
+  doctorInCharge   User   @relation(fields: [doctorInChargeId], references: [id], onDelete: Restrict)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }
