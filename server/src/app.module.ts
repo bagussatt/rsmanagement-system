@@ -13,7 +13,7 @@ import { InitialAssessmentModule } from './initial-assessment/initial-assessment
   imports: [
     ...(process.env.NODE_ENV === 'production'
       ? [
-          ServeStatic.forRoot({
+          ServeStaticModule.forRoot({
             rootPath: join(__dirname, '..', 'public'),
           }),
         ]
