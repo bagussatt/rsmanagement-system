@@ -6,6 +6,7 @@ import api from "@/lib/axios"
 import { cpptService } from "@/services/cppt.service"
 import { medicalResumeService } from "@/services/medical-resume.service"
 import { initialAssessmentService } from "@/services/initial-assessment.service"
+import { showSuccessAlert, showErrorAlert, showConfirmAlert, showLoadingAlert, closeAlert } from "@/lib/sweetalert"
 import {
   ArrowLeft,
   User,
@@ -20,7 +21,8 @@ import {
   AlertCircle,
   ClipboardList,
   Activity,
-  AlertTriangle
+  AlertTriangle,
+  LogOut
 } from "lucide-react"
 
 interface Patient {
@@ -206,13 +208,15 @@ export default function PatientDetailPage() {
 
   const handleSubmitCppt = async () => {
     if (!cpptForm.subjective || !cpptForm.objective || !cpptForm.assessment || !cpptForm.plan) {
-      setError("Mohon lengkapi semua field CPPT (Subjective, Objective, Assessment, Plan)")
+      await showErrorAlert('Validasi Gagal', 'Mohon lengkapi semua field CPPT (Subjective, Objective, Assessment, Plan)')
       return
     }
 
     try {
       setIsSubmitting(true)
       setError(null)
+
+      showLoadingAlert('Menyimpan CPPT...')
 
       const cpptData = {
         patientId,
@@ -221,6 +225,11 @@ export default function PatientDetailPage() {
 
       const newCppt = await cpptService.createCppt(cpptData)
       setCpptEntries([newCppt, ...cpptEntries])
+
+      closeAlert()
+
+      // Show success alert
+      await showSuccessAlert('Berhasil', 'Catatan CPPT berhasil ditambahkan')
 
       // Reset form
       setCpptForm({
@@ -234,7 +243,10 @@ export default function PatientDetailPage() {
 
     } catch (err: any) {
       console.error("Error creating CPPT:", err)
-      setError(err.response?.data?.message || err.message || "Failed to create CPPT entry")
+      closeAlert()
+      const errorMessage = err.response?.data?.message || err.message || "Failed to create CPPT entry"
+      await showErrorAlert('Gagal Menambahkan CPPT', errorMessage)
+      setError(errorMessage)
     } finally {
       setIsSubmitting(false)
     }
@@ -242,13 +254,15 @@ export default function PatientDetailPage() {
 
   const handleSubmitResume = async () => {
     if (!resumeForm.diagnosis) {
-      setError("Mohon lengkapi diagnosis")
+      await showErrorAlert('Validasi Gagal', 'Mohon lengkapi diagnosis')
       return
     }
 
     try {
       setIsSubmittingResume(true)
       setError(null)
+
+      showLoadingAlert('Menyimpan Resume Medis...')
 
       const resumeData = {
         patientId,
@@ -257,6 +271,11 @@ export default function PatientDetailPage() {
 
       const newResume = await medicalResumeService.createMedicalResume(resumeData)
       setMedicalResumes([newResume, ...medicalResumes])
+
+      closeAlert()
+
+      // Show success alert
+      await showSuccessAlert('Berhasil', 'Resume medis berhasil ditambahkan')
 
       // Reset form
       setResumeForm({
@@ -270,7 +289,10 @@ export default function PatientDetailPage() {
 
     } catch (err: any) {
       console.error("Error creating medical resume:", err)
-      setError(err.response?.data?.message || err.message || "Failed to create medical resume")
+      closeAlert()
+      const errorMessage = err.response?.data?.message || err.message || "Failed to create medical resume"
+      await showErrorAlert('Gagal Menambahkan Resume', errorMessage)
+      setError(errorMessage)
     } finally {
       setIsSubmittingResume(false)
     }
@@ -278,13 +300,15 @@ export default function PatientDetailPage() {
 
   const handleSubmitAssessment = async () => {
     if (!assessmentForm.chiefComplaint) {
-      setError("Mohon lengkapi keluhan utama pasien")
+      await showErrorAlert('Validasi Gagal', 'Mohon lengkapi keluhan utama pasien')
       return
     }
 
     try {
       setIsSubmittingAssessment(true)
       setError(null)
+
+      showLoadingAlert('Menyimpan Asesmen Awal...')
 
       const assessmentData = {
         chiefComplaint: assessmentForm.chiefComplaint || null,
@@ -311,6 +335,11 @@ export default function PatientDetailPage() {
 
       const newAssessment = await initialAssessmentService.createInitialAssessment(patientId, assessmentData)
       setInitialAssessment(newAssessment)
+
+      closeAlert()
+
+      // Show success alert
+      await showSuccessAlert('Berhasil', 'Asesmen awal berhasil ditambahkan')
 
       // Reset form
       setAssessmentForm({
@@ -339,7 +368,10 @@ export default function PatientDetailPage() {
 
     } catch (err: any) {
       console.error("Error creating assessment:", err)
-      setError(err.response?.data?.message || err.message || "Failed to create initial assessment")
+      closeAlert()
+      const errorMessage = err.response?.data?.message || err.message || "Failed to create initial assessment"
+      await showErrorAlert('Gagal Menambahkan Asesmen', errorMessage)
+      setError(errorMessage)
     } finally {
       setIsSubmittingAssessment(false)
     }
@@ -418,12 +450,30 @@ export default function PatientDetailPage() {
                 <p className="text-slate-600">Rekam Medis & CPPT</p>
               </div>
             </div>
-            <button
-              onClick={() => router.push("/dashboard")}
-              className="flex items-center gap-2 bg-red-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-red-700"
-            >
-              Keluar
-            </button>
+            <div className="flex items-center gap-3">
+              <div className="text-right">
+                <p className="text-sm text-slate-600">{user?.name}</p>
+                <p className="text-xs text-slate-500">{user?.role}</p>
+              </div>
+              <button
+                onClick={async () => {
+                  const result = await showConfirmAlert(
+                    'Konfirmasi Logout',
+                    'Apakah Anda yakin ingin keluar?',
+                    'Ya, Keluar',
+                    'Batal'
+                  )
+                  if (result.isConfirmed) {
+                    localStorage.removeItem("token")
+                    router.push("/login")
+                  }
+                }}
+                className="flex items-center gap-2 bg-red-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-red-700"
+              >
+                <LogOut className="h-4 w-4" />
+                Keluar
+              </button>
+            </div>
           </div>
         </div>
       </div>

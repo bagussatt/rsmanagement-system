@@ -5,7 +5,6 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import Image from "next/image"; // IMPORT INI WAJIB
 import {
-  CircleAlert,
   Loader2,
   User,
   Lock,
@@ -19,23 +18,22 @@ import useAuth from "@/hooks/use-auth";
 export function LoginForm() {
   const [body, setBody] = useState({ username: "", password: "" });
   const [showPassword, setShowPassword] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
   const { login, isLoading } = useAuth();
   const router = useRouter();
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
-    setErrorMessage(null);
 
     try {
-      // Login and save token
+      // Login and save token (sweetAlert handled in useAuth hook)
       await login(body.username, body.password);
 
       // Redirect to dashboard - dashboard will handle role-based routing
       router.push("/dashboard");
     } catch (error: any) {
-      setErrorMessage(error.message);
+      // Error is already handled in useAuth hook with sweetAlert
+      console.error("Login failed:", error);
     }
   };
 
@@ -50,13 +48,6 @@ export function LoginForm() {
             <h1 className="text-4xl font-black text-slate-900 tracking-tighter">Selamat Datang</h1>
             <p className="text-slate-500 font-medium mt-2 text-lg">Masuk untuk mengelola data Anda</p>
           </div>
-
-          {errorMessage && (
-            <div className="flex items-center gap-3 p-4 rounded-xl bg-red-50 text-red-600 border border-red-100 text-sm animate-shake">
-              <CircleAlert className="h-4 w-4 shrink-0" />
-              <span>{errorMessage}</span>
-            </div>
-          )}
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div className="space-y-1.5">

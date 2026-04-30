@@ -6,6 +6,7 @@ import { patientService } from "@/services/patient.service"
 import { initialAssessmentService } from "@/services/initial-assessment.service"
 import NurseLayout from "@/components/dashboard/nurse-layout"
 import api from "@/lib/axios"
+import { showSuccessAlert, showErrorAlert, showLoadingAlert, closeAlert } from "@/lib/sweetalert"
 import { ArrowLeft, Save, User, Phone, Calendar, MapPin, Stethoscope } from "lucide-react"
 
 export default function NewPatientPage() {
@@ -94,13 +95,15 @@ export default function NewPatientPage() {
     e.preventDefault()
 
     if (!formData.medicalRecordNumber || !formData.name || !formData.birthDate || !formData.gender) {
-      setError("Mohon lengkapi semua field yang wajib diisi")
+      await showErrorAlert('Validasi Gagal', 'Mohon lengkapi semua field yang wajib diisi')
       return
     }
 
     try {
       setIsLoading(true)
       setError(null)
+
+      showLoadingAlert('Mendaftarkan Pasien...')
 
       // Step 1: Create patient with basic information only
       const patientData = {
@@ -141,12 +144,20 @@ export default function NewPatientPage() {
 
       await initialAssessmentService.createInitialAssessment(newPatient.id, assessmentData)
 
+      closeAlert()
+
+      // Show success alert
+      await showSuccessAlert('Pasien Berhasil Didaftarkan', 'Data pasien dan asesmen awal telah berhasil disimpan')
+
       // Redirect to nurse dashboard
       router.push("/dashboard/nurse")
 
     } catch (err: any) {
       console.error("Error creating patient:", err)
-      setError(err.response?.data?.message || err.message || "Failed to create patient")
+      closeAlert()
+      const errorMessage = err.response?.data?.message || err.message || "Failed to create patient"
+      await showErrorAlert('Gagal Mendaftarkan Pasien', errorMessage)
+      setError(errorMessage)
     } finally {
       setIsLoading(false)
     }

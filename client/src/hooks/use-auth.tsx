@@ -1,6 +1,7 @@
 import api from "@/lib/axios";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
+import { showSuccessAlert, showErrorAlert, showConfirmAlert } from "@/lib/sweetalert";
 
 export default function useAuth() {
   const router = useRouter();
@@ -49,6 +50,9 @@ export default function useAuth() {
       // Fetch user profile immediately after login
       await fetchProfile();
 
+      // Show success alert
+      await showSuccessAlert('Login Berhasil', 'Selamat datang kembali!')
+
       return response.data;
     } catch (err: any) {
       // Menangani error login (bisa berupa string atau array pesan dari NestJS)
@@ -56,6 +60,10 @@ export default function useAuth() {
       const formattedMessage = Array.isArray(message) ? message.join(", ") : message;
 
       setError(formattedMessage);
+
+      // Show error alert
+      await showErrorAlert('Login Gagal', formattedMessage)
+
       throw new Error(formattedMessage);
     } finally {
       setIsLoading(false);
@@ -70,13 +78,21 @@ export default function useAuth() {
     setError(null);
     try {
       const response = await api.post('/api/auth/register', userData);
+
+      // Show success alert
+      await showSuccessAlert('Registrasi Berhasil', 'Akun Anda telah berhasil dibuat!')
+
       return response.data;
     } catch (err: any) {
       // Menangani error register (Error 400 atau validasi)
       const message = err.response?.data?.message || "Gagal mendaftarkan akun.";
       const formattedMessage = Array.isArray(message) ? message.join(", ") : message;
-      
+
       setError(formattedMessage);
+
+      // Show error alert
+      await showErrorAlert('Registrasi Gagal', formattedMessage)
+
       throw new Error(formattedMessage);
     } finally {
       setIsLoading(false);
@@ -86,9 +102,19 @@ export default function useAuth() {
   /**
    * Fungsi Logout
    */
-  const logout = () => {
-    localStorage.removeItem("token");
-    router.push("/login");
+  const logout = async () => {
+    const result = await showConfirmAlert(
+      'Konfirmasi Logout',
+      'Apakah Anda yakin ingin keluar?',
+      'Ya, Keluar',
+      'Batal'
+    );
+
+    if (result.isConfirmed) {
+      localStorage.removeItem("token");
+      await showSuccessAlert('Logout Berhasil', 'Sampai jumpa kembali!')
+      router.push("/login");
+    }
   };
 
   return { register, login, logout, isLoading, error, setError, user, fetchProfile };
