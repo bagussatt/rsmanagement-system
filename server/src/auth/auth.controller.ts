@@ -6,8 +6,9 @@ import {
   HttpStatus,
   Post,
   Request,
+  Query,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiCreatedResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiCreatedResponse, ApiOkResponse, ApiTags, ApiQuery } from '@nestjs/swagger';
 import { Role } from '@prisma/client';
 import { ReqUser } from 'src/interface/request';
 import { Public, SetRoles } from './auth.metadata';
@@ -15,11 +16,11 @@ import { AuthService } from './auth.service';
 import { LoginDto } from './dto/login';
 import { RegisterDto } from './dto/register.dto';
 
-@ApiTags('auth') 
+@ApiTags('auth')
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) { }
-  
+
   @Public()
   @HttpCode(HttpStatus.OK)
   @Post('login')
@@ -35,7 +36,7 @@ export class AuthController {
   signIn(@Body() signInDto: LoginDto) {
     return this.authService.signIn(signInDto.username, signInDto.password);
   }
-  @Public() 
+  @Public()
   @Post('register')
   @ApiCreatedResponse({
     description: 'User successfully registered',
@@ -55,7 +56,7 @@ export class AuthController {
   async register(@Body() dto: RegisterDto) {
     return this.authService.register(dto);
   }
-
+  @Public()
   @Post('refresh')
   @ApiBearerAuth()
   @ApiOkResponse({
@@ -71,10 +72,9 @@ export class AuthController {
     return this.authService.refresh(req.user.sub);
   }
 
-  
+
   @Get('me')
   @ApiBearerAuth()
-  
   @ApiOkResponse({
     description: 'User Profile',
     schema: {
@@ -88,5 +88,16 @@ export class AuthController {
   })
   async getProfile(@Request() req: ReqUser) {
     return req.user;
+  }
+
+  @Get('users')
+  @ApiBearerAuth()
+  @ApiOkResponse({
+    description: 'Get users by role',
+    type: [Object],
+  })
+  @ApiQuery({ name: 'role', required: false, enum: ['DOKTER', 'PERAWAT', 'BIDAN', 'AHLI_GIZI', 'APOTEKER', 'FISIOTERAPIS', 'ADMIN'] })
+  async getUsersByRole(@Query('role') role?: string) {
+    return this.authService.getUsersByRole(role);
   }
 }

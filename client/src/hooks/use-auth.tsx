@@ -1,107 +1,95 @@
-"use client"
+import api from "@/lib/axios";
+import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
 
-import axios from "axios"
-const useAuth = () => {
-  const baseUrl = "/api"
+export default function useAuth() {
+  const router = useRouter();
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [user, setUser] = useState<any>(null);
 
-  const getToken = () => {
-    const token = localStorage.getItem("token")
+  useEffect(() => {
+    const token = localStorage.getItem("token");
     if (token) {
-      return token
+      fetchProfile();
+    } else {
+      setIsLoading(false);
     }
-    return null
-  }
+  }, []);
 
-  const saveToken = (token: string) => {
-    localStorage.setItem("token", token)
-  }
+  const fetchProfile = async () => {
+    try {
+      const response = await api.get("/api/auth/me");
+      setUser(response.data);
+    } catch (err) {
+      console.error("Failed to fetch profile:", err);
+      localStorage.removeItem("token");
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-  const removeToken = () => {
-    localStorage.removeItem("token")
-  }
-
+  /**
+   * Fungsi Login
+   */
   const login = async (username: string, password: string) => {
+    setIsLoading(true);
+    setError(null);
     try {
-      const response = await axios.post(
-        `/auth/login`,
-        {
-          username,
-          password,
-        },
-        {
-          baseURL: baseUrl,
-        }
-      )
-      if (response.data?.access_token) {
-        saveToken(response.data?.access_token)
-        return response.data?.access_token
-      } else {
-        throw new Error("Login failed")
-      }
-    } catch (error) {
-      console.error("Login error:", error)
-      throw error
+      const response = await api.post("/api/auth/login", {
+        username,
+        password,
+      });
+
+      const { access_token } = response.data;
+
+      // Simpan token ke localStorage
+      localStorage.setItem("token", access_token);
+
+      // Fetch user profile immediately after login
+      await fetchProfile();
+
+      return response.data;
+    } catch (err: any) {
+      // Menangani error login (bisa berupa string atau array pesan dari NestJS)
+      const message = err.response?.data?.message || "Login gagal";
+      const formattedMessage = Array.isArray(message) ? message.join(", ") : message;
+
+      setError(formattedMessage);
+      throw new Error(formattedMessage);
+    } finally {
+      setIsLoading(false);
     }
-  }
+  };
 
-  const fetcher = () => {
-    const token = getToken() || ""
-    return axios.create({
-      baseURL: baseUrl,
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    })
-  }
-
-  const isLogin = async () => {
-    const token = getToken()
-    if (!token) {
-      return false
-    }
-
+  /**
+   * Fungsi Register
+   */
+  const register = async (userData: any) => {
+    setIsLoading(true);
+    setError(null);
     try {
-      const refresh = await fetcher().post(`/auth/refresh`)
-      console.log("Refresh token response:", refresh)
-      if (refresh.data?.access_token) {
-        saveToken(refresh.data.access_token)
-        return true
-      }
-      return false
-    } catch (error) {
-      console.error("Error checking login status:", error)
-      return false
+      const response = await api.post('/api/auth/register', userData);
+      return response.data;
+    } catch (err: any) {
+      // Menangani error register (Error 400 atau validasi)
+      const message = err.response?.data?.message || "Gagal mendaftarkan akun.";
+      const formattedMessage = Array.isArray(message) ? message.join(", ") : message;
+      
+      setError(formattedMessage);
+      throw new Error(formattedMessage);
+    } finally {
+      setIsLoading(false);
     }
-  }
+  };
 
-  const logout = async () => {
-    try {
-      // await axios.post(
-      //   `/auth/logout`,
-      //   {},
-      //   {
-      //     baseURL: baseUrl,
-      //     headers: {
-      //       Authorization: `Bearer ${getToken()}`,
-      //     },
-      //   }
-      // )
-      removeToken()
-    } catch (error) {
-      console.error("Logout error:", error)
-      throw error
-    }
-  }
+  /**
+   * Fungsi Logout
+   */
+  const logout = () => {
+    localStorage.removeItem("token");
+    router.push("/login");
+  };
 
-  return {
-    login,
-    isLogin,
-    getToken,
-    saveToken,
-    removeToken,
-    fetcher,
-    logout,
-  }
+  return { register, login, logout, isLoading, error, setError, user, fetchProfile };
 }
-
-export default useAuth

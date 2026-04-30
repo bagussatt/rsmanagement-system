@@ -4,12 +4,16 @@ import { join } from 'path';
 import { AuthModule } from './auth/auth.module';
 import { CommonModule } from './common/common.module';
 import { LoggingModule } from './logging/logging.module';
+import { PatientsModule } from './patients/patients.module';
+import { CpptModule } from './cppt/cppt.module';
+import { MedicalResumeModule } from './medical-resume/medical-resume.module';
+import { InitialAssessmentModule } from './initial-assessment/initial-assessment.module';
 
 @Module({
   imports: [
     ...(process.env.NODE_ENV === 'production'
       ? [
-          ServeStaticModule.forRoot({
+          ServeStatic.forRoot({
             rootPath: join(__dirname, '..', 'public'),
           }),
         ]
@@ -17,6 +21,10 @@ import { LoggingModule } from './logging/logging.module';
     AuthModule,
     CommonModule,
     LoggingModule,
+    PatientsModule,
+    CpptModule,
+    MedicalResumeModule,
+    InitialAssessmentModule,
   ],
   controllers: [],
   providers: [],

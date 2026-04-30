@@ -15,6 +15,11 @@ async function bootstrap() {
     app.use(proxy.use.bind(proxy));
     useSwagger(app);
   }
+  app.enableCors({
+    origin: 'http://localhost:3001', // Sesuaikan dengan port Next.js Anda
+    methods: 'GET,POST,PUT,DELETE,PATCH',
+    credentials: true, // Izinkan pengiriman cookie/auth header
+  });
 
   await app.listen(3003);
 }

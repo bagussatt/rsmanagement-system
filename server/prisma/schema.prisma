@@ -33,6 +33,7 @@ model User {
   cpptEntries   Cppt[]          @relation("AuthorRelation")
   verifiedCppts Cppt[]          @relation("VerifierRelation")
   resumes       MedicalResume[]
+  patients      Patient[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -46,6 +47,43 @@ model Patient {
   gender              String
   address             String?
   phone               String?
+
+  doctorId   String?
+  doctor     User?    @relation(fields: [doctorId], references: [id], onDelete: SetNull)
+
+  // Comprehensive Initial Assessment Fields
+  // Anamnesis (Data Subjektif)
+  chiefComplaint           String?
+  painScale               String?
+  currentIllnessHistory   String?
+  pastMedicalHistory      String?
+  allergies               String?
+
+  // Pemeriksaan Fisik (Data Objektif)
+  bloodPressure           String?
+  temperature             String?
+  pulse                   String?
+  respiration             String?
+  spO2                    String?
+  headToToeExam           String?
+
+  // Skrining Fungsional & Risiko
+  fallRisk                String?
+  nutritionalStatus       String?
+  functionalAssessment    String?
+
+  // Asesmen Medis & Keperawatan
+  initialDiagnosis        String?
+  nursingPlanning         String?
+  doctorNotes             String?
+
+  // Tambahan Spesifik
+  patientEducation        String?
+  communicationNeeds      String?
+  socioeconomicHistory    String?
+
+  // Triage
+  triageCategory          String?
 
   visits      Visit[]
   cpptEntries Cppt[]
@@ -65,14 +103,13 @@ model Visit {
   status     String
 
   cpptEntries   Cppt[]
-  medicalResume MedicalResume?
 }
 
 model Cppt {
   id        String  @id @default(cuid())
 
-  visitId   String
-  visit     Visit   @relation(fields: [visitId], references: [id], onDelete: Cascade)
+  visitId   String?
+  visit     Visit?   @relation(fields: [visitId], references: [id], onDelete: Cascade)
 
   authorId String
   author   User   @relation("AuthorRelation", fields: [authorId], references: [id], onDelete: Restrict)
@@ -96,29 +133,19 @@ model Cppt {
 }
 
 model MedicalResume {
-  id      String @id @default(cuid())
-
-  visitId String @unique
-  visit   Visit  @relation(fields: [visitId], references: [id], onDelete: Cascade)
+  id        String   @id @default(cuid())
 
   patientId String
-  patient   Patient @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  patient   Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
 
-  admissionReason   String
-  clinicalSummary   String
-  diagnosticResults String
+  authorId String
+  author   User   @relation(fields: [authorId], references: [id], onDelete: Restrict)
 
-  mainDiagnosis      String
-  secondaryDiagnoses String?
-  procedures         String?
-
-  drugsDuringStay String
-  homeMedications String
-  prognosis       String
-  followUpPlan    String
-
-  doctorInChargeId String
-  doctorInCharge   User   @relation(fields: [doctorInChargeId], references: [id], onDelete: Restrict)
+  diagnosis       String
+  mainComplaint   String?
+  treatmentPlan   String?
+  recommendations String?
+  notes           String?
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

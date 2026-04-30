@@ -73,4 +73,24 @@ export class AuthService {
     const { password: _, ...result } = user;
     return result;
   }
+
+  async getUsersByRole(role?: string) {
+    const where = role ? { role: role as any } : {};
+
+    return this.prisma.user.findMany({
+      where,
+      select: {
+        id: true,
+        name: true,
+        username: true,
+        role: true,
+        specialization: true,
+        sip: true,
+        phone: true,
+      },
+      orderBy: {
+        name: 'asc',
+      },
+    });
+  }
 }
