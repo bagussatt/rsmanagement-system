@@ -3,7 +3,8 @@
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import api from "@/lib/axios"
-import { Users, Activity, LogOut } from "lucide-react"
+import DashboardHeader from "@/components/dashboard/dashboard-header"
+import { Users, Activity } from "lucide-react"
 
 export default function DoctorDashboard() {
   const router = useRouter()
@@ -64,11 +65,6 @@ export default function DoctorDashboard() {
     }
   }
 
-  const handleLogout = () => {
-    localStorage.removeItem("token")
-    router.push("/login")
-  }
-
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-blue-50 to-indigo-100">
@@ -102,28 +98,12 @@ export default function DoctorDashboard() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
-      {/* Header */}
-      <div className="bg-white shadow-sm border-b border-slate-200">
-        <div className="max-w-7xl mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <h1 className="text-2xl font-bold text-slate-900">
-                {user?.role === "ADMIN" ? "Dashboard Admin" : "Dashboard Dokter"}
-              </h1>
-              <p className="text-slate-600">
-                Welcome, {user?.name || user?.username}! {user?.role === "DOKTER" ? "(Pasien Anda Sendiri)" : "(Semua Pasien)"}
-              </p>
-            </div>
-            <button
-              onClick={handleLogout}
-              className="flex items-center gap-2 bg-red-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-red-700"
-            >
-              <LogOut className="h-4 w-4" />
-              Logout
-            </button>
-          </div>
-        </div>
-      </div>
+      {/* Unified Header */}
+      <DashboardHeader
+        title={user?.role === "ADMIN" ? "Dashboard Admin" : "Dashboard Dokter"}
+        subtitle={`Welcome, ${user?.name || user?.username}! ${user?.role === "DOKTER" ? "(Pasien Anda Sendiri)" : "(Semua Pasien)"}`}
+        user={user}
+      />
 
       {/* Content */}
       <div className="max-w-7xl mx-auto px-6 py-8">

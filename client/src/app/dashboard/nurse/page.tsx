@@ -61,12 +61,31 @@ export default function NurseDashboardPage() {
   const calculateAge = (birthDate: string) => {
     const today = new Date()
     const birth = new Date(birthDate)
-    let age = today.getFullYear() - birth.getFullYear()
-    const monthDiff = today.getMonth() - birth.getMonth()
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
-      age--
+
+    let years = today.getFullYear() - birth.getFullYear()
+    let months = today.getMonth() - birth.getMonth()
+    let days = today.getDate() - birth.getDate()
+
+    // Adjust if negative days
+    if (days < 0) {
+      months--
+      const lastMonth = new Date(today.getFullYear(), today.getMonth(), 0)
+      days += lastMonth.getDate()
     }
-    return age
+
+    // Adjust if negative months
+    if (months < 0) {
+      years--
+      months += 12
+    }
+
+    // Build age string based on values
+    const parts = []
+    if (years > 0) parts.push(`${years} tahun`)
+    if (months > 0) parts.push(`${months} bulan`)
+    if (days > 0 || parts.length === 0) parts.push(`${days} hari`)
+
+    return parts.join(' ')
   }
 
   const formatDate = (dateString: string) => {
@@ -93,35 +112,33 @@ export default function NurseDashboardPage() {
 
   return (
     <NurseLayout>
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-green-50">
-        {/* Header */}
-        <div className="bg-white shadow-sm border-b border-slate-200">
-          <div className="max-w-7xl mx-auto px-6 py-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-2xl font-bold text-slate-900">Dashboard Perawat</h1>
-                <p className="text-slate-600">Kelola data pasien dan catatan medis</p>
-              </div>
-              <div className="flex items-center gap-3">
-                <button
-                  onClick={() => router.push("/dashboard")}
-                  className="px-4 py-2 border border-slate-200 rounded-lg text-slate-700 hover:bg-slate-50 font-medium"
-                >
-                  Dashboard Utama
-                </button>
-                <button
-                  onClick={() => router.push("/dashboard/nurse/new-patient")}
-                  className="bg-gradient-to-r from-green-600 to-emerald-600 text-white px-6 py-3 rounded-lg font-semibold flex items-center gap-2 hover:shadow-lg transition-all"
-                >
-                  <UserPlus className="h-5 w-5" />
-                  Pasien Baru
-                </button>
-              </div>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-green-50 pb-8">
+        {/* Page Title & Actions */}
+        <div className="max-w-7xl mx-auto px-6 py-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h1 className="text-2xl font-bold text-slate-900">Dashboard Perawat</h1>
+              <p className="text-slate-600">Kelola data pasien dan catatan medis</p>
+            </div>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => router.push("/dashboard")}
+                className="px-4 py-2 border border-slate-200 rounded-lg text-slate-700 hover:bg-slate-50 font-medium"
+              >
+                Dashboard Utama
+              </button>
+              <button
+                onClick={() => router.push("/dashboard/nurse/new-patient")}
+                className="bg-gradient-to-r from-green-600 to-emerald-600 text-white px-6 py-3 rounded-lg font-semibold flex items-center gap-2 hover:shadow-lg transition-all"
+              >
+                <UserPlus className="h-5 w-5" />
+                Pasien Baru
+              </button>
             </div>
           </div>
         </div>
 
-        <div className="max-w-7xl mx-auto px-6 py-8">
+        <div className="max-w-7xl mx-auto px-6">
           {/* Error Alert */}
           {error && (
             <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-6">

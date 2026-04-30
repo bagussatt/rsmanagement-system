@@ -7,8 +7,8 @@ import { cpptService } from "@/services/cppt.service"
 import { medicalResumeService } from "@/services/medical-resume.service"
 import { initialAssessmentService } from "@/services/initial-assessment.service"
 import { showSuccessAlert, showErrorAlert, showConfirmAlert, showLoadingAlert, closeAlert } from "@/lib/sweetalert"
+import DashboardHeader from "@/components/dashboard/dashboard-header"
 import {
-  ArrowLeft,
   User,
   Calendar,
   Phone,
@@ -21,8 +21,7 @@ import {
   AlertCircle,
   ClipboardList,
   Activity,
-  AlertTriangle,
-  LogOut
+  AlertTriangle
 } from "lucide-react"
 
 interface Patient {
@@ -380,12 +379,31 @@ export default function PatientDetailPage() {
   const calculateAge = (birthDate: string) => {
     const today = new Date()
     const birth = new Date(birthDate)
-    let age = today.getFullYear() - birth.getFullYear()
-    const monthDiff = today.getMonth() - birth.getMonth()
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birth.getDate())) {
-      age--
+
+    let years = today.getFullYear() - birth.getFullYear()
+    let months = today.getMonth() - birth.getMonth()
+    let days = today.getDate() - birth.getDate()
+
+    // Adjust if negative days
+    if (days < 0) {
+      months--
+      const lastMonth = new Date(today.getFullYear(), today.getMonth(), 0)
+      days += lastMonth.getDate()
     }
-    return age
+
+    // Adjust if negative months
+    if (months < 0) {
+      years--
+      months += 12
+    }
+
+    // Build age string based on values
+    const parts = []
+    if (years > 0) parts.push(`${years} tahun`)
+    if (months > 0) parts.push(`${months} bulan`)
+    if (days > 0 || parts.length === 0) parts.push(`${days} hari`)
+
+    return parts.join(' ')
   }
 
   const formatDate = (dateString: string) => {
@@ -435,48 +453,13 @@ export default function PatientDetailPage() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
       {/* Header */}
-      <div className="bg-white shadow-sm border-b border-slate-200">
-        <div className="max-w-7xl mx-auto px-6 py-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => router.push("/dashboard")}
-                className="p-2 hover:bg-slate-100 rounded-lg"
-              >
-                <ArrowLeft className="h-5 w-5 text-slate-600" />
-              </button>
-              <div>
-                <h1 className="text-2xl font-bold text-slate-900">Detail Pasien</h1>
-                <p className="text-slate-600">Rekam Medis & CPPT</p>
-              </div>
-            </div>
-            <div className="flex items-center gap-3">
-              <div className="text-right">
-                <p className="text-sm text-slate-600">{user?.name}</p>
-                <p className="text-xs text-slate-500">{user?.role}</p>
-              </div>
-              <button
-                onClick={async () => {
-                  const result = await showConfirmAlert(
-                    'Konfirmasi Logout',
-                    'Apakah Anda yakin ingin keluar?',
-                    'Ya, Keluar',
-                    'Batal'
-                  )
-                  if (result.isConfirmed) {
-                    localStorage.removeItem("token")
-                    router.push("/login")
-                  }
-                }}
-                className="flex items-center gap-2 bg-red-600 text-white px-4 py-2 rounded-lg font-semibold hover:bg-red-700"
-              >
-                <LogOut className="h-4 w-4" />
-                Keluar
-              </button>
-            </div>
-          </div>
-        </div>
-      </div>
+      <DashboardHeader
+        title="Detail Pasien"
+        subtitle="Rekam Medis & CPPT"
+        showBackButton={true}
+        backUrl="/dashboard"
+        user={user}
+      />
 
       <div className="max-w-7xl mx-auto px-6 py-8">
         {/* Error Alert */}

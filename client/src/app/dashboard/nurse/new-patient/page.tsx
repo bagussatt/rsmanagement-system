@@ -165,26 +165,24 @@ export default function NewPatientPage() {
 
   return (
     <NurseLayout>
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-green-50">
-        {/* Header */}
-        <div className="bg-white shadow-sm border-b border-slate-200">
-          <div className="max-w-7xl mx-auto px-6 py-4">
-            <div className="flex items-center gap-4">
-              <button
-                onClick={() => router.push("/dashboard/nurse")}
-                className="p-2 hover:bg-slate-100 rounded-lg"
-              >
-                <ArrowLeft className="h-5 w-5 text-slate-600" />
-              </button>
-              <div>
-                <h1 className="text-2xl font-bold text-slate-900">Registrasi Pasien Baru</h1>
-                <p className="text-slate-600">Isi data pasien dan assessment awal dengan lengkap</p>
-              </div>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-green-50 pb-8">
+        {/* Page Title Section */}
+        <div className="max-w-7xl mx-auto px-6 py-6">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => router.push("/dashboard/nurse")}
+              className="p-2 hover:bg-slate-100 rounded-lg transition-colors"
+            >
+              <ArrowLeft className="h-5 w-5 text-slate-600" />
+            </button>
+            <div>
+              <h1 className="text-2xl font-bold text-slate-900">Registrasi Pasien Baru</h1>
+              <p className="text-slate-600">Isi data pasien dan assessment awal dengan lengkap</p>
             </div>
           </div>
         </div>
 
-        <div className="max-w-3xl mx-auto px-6 py-8">
+        <div className="max-w-3xl mx-auto px-6">
           {/* Error Alert */}
           {error && (
             <div className="bg-red-50 border border-red-200 rounded-xl p-4 mb-6">
