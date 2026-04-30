@@ -118,6 +118,43 @@ export default function PatientDetailPage() {
   // Initial Assessment State
   const [initialAssessment, setInitialAssessment] = useState<any>(null)
   const [isLoadingAssessment, setIsLoadingAssessment] = useState(false)
+  const [showAssessmentForm, setShowAssessmentForm] = useState(false)
+  const [isSubmittingAssessment, setIsSubmittingAssessment] = useState(false)
+
+  // Initial Assessment Form State
+  const [assessmentForm, setAssessmentForm] = useState({
+    // Anamnesis (Data Subjektif)
+    chiefComplaint: "",
+    painScale: "",
+    currentIllnessHistory: "",
+    pastMedicalHistory: "",
+    allergies: "",
+
+    // Pemeriksaan Fisik (Data Objektif)
+    bloodPressure: "",
+    temperature: "",
+    pulse: "",
+    respiration: "",
+    spO2: "",
+    headToToeExam: "",
+
+    // Skrining Fungsional & Risiko
+    fallRisk: "",
+    nutritionalStatus: "",
+    functionalAssessment: "",
+
+    // Asesmen Medis & Keperawatan
+    initialDiagnosis: "",
+    nursingPlanning: "",
+
+    // Tambahan Spesifik
+    patientEducation: "",
+    communicationNeeds: "",
+    socioeconomicHistory: "",
+
+    // Triage
+    triageCategory: "",
+  })
 
   // Tab State
   const [activeTab, setActiveTab] = useState<'assessment' | 'cppt' | 'resume'>('assessment')
@@ -236,6 +273,75 @@ export default function PatientDetailPage() {
       setError(err.response?.data?.message || err.message || "Failed to create medical resume")
     } finally {
       setIsSubmittingResume(false)
+    }
+  }
+
+  const handleSubmitAssessment = async () => {
+    if (!assessmentForm.chiefComplaint) {
+      setError("Mohon lengkapi keluhan utama pasien")
+      return
+    }
+
+    try {
+      setIsSubmittingAssessment(true)
+      setError(null)
+
+      const assessmentData = {
+        chiefComplaint: assessmentForm.chiefComplaint || null,
+        painScale: assessmentForm.painScale || null,
+        currentIllnessHistory: assessmentForm.currentIllnessHistory || null,
+        pastMedicalHistory: assessmentForm.pastMedicalHistory || null,
+        allergies: assessmentForm.allergies || null,
+        bloodPressure: assessmentForm.bloodPressure || null,
+        temperature: assessmentForm.temperature || null,
+        pulse: assessmentForm.pulse || null,
+        respiration: assessmentForm.respiration || null,
+        spO2: assessmentForm.spO2 || null,
+        headToToeExam: assessmentForm.headToToeExam || null,
+        fallRisk: assessmentForm.fallRisk || null,
+        nutritionalStatus: assessmentForm.nutritionalStatus || null,
+        functionalAssessment: assessmentForm.functionalAssessment || null,
+        initialDiagnosis: assessmentForm.initialDiagnosis || null,
+        nursingPlanning: assessmentForm.nursingPlanning || null,
+        patientEducation: assessmentForm.patientEducation || null,
+        communicationNeeds: assessmentForm.communicationNeeds || null,
+        socioeconomicHistory: assessmentForm.socioeconomicHistory || null,
+        triageCategory: assessmentForm.triageCategory || null,
+      }
+
+      const newAssessment = await initialAssessmentService.createInitialAssessment(patientId, assessmentData)
+      setInitialAssessment(newAssessment)
+
+      // Reset form
+      setAssessmentForm({
+        chiefComplaint: "",
+        painScale: "",
+        currentIllnessHistory: "",
+        pastMedicalHistory: "",
+        allergies: "",
+        bloodPressure: "",
+        temperature: "",
+        pulse: "",
+        respiration: "",
+        spO2: "",
+        headToToeExam: "",
+        fallRisk: "",
+        nutritionalStatus: "",
+        functionalAssessment: "",
+        initialDiagnosis: "",
+        nursingPlanning: "",
+        patientEducation: "",
+        communicationNeeds: "",
+        socioeconomicHistory: "",
+        triageCategory: "",
+      })
+      setShowAssessmentForm(false)
+
+    } catch (err: any) {
+      console.error("Error creating assessment:", err)
+      setError(err.response?.data?.message || err.message || "Failed to create initial assessment")
+    } finally {
+      setIsSubmittingAssessment(false)
     }
   }
 
@@ -419,6 +525,21 @@ export default function PatientDetailPage() {
                 <h3 className="text-xl font-bold text-slate-900">Asesmen Awal Pasien</h3>
                 <p className="text-slate-600 text-sm">Dokumen asesmen awal perawat</p>
               </div>
+              {!initialAssessment && (user?.role === "PERAWAT" || user?.role === "BIDAN") && (
+                <button
+                  onClick={() => setShowAssessmentForm(!showAssessmentForm)}
+                  className="bg-gradient-to-r from-green-600 to-emerald-600 text-white px-6 py-3 rounded-xl font-semibold flex items-center gap-2 hover:shadow-lg transition-all"
+                >
+                  {showAssessmentForm ? (
+                    <>Batal</>
+                  ) : (
+                    <>
+                      <Plus className="h-5 w-5" />
+                      Buat Asesmen Awal
+                    </>
+                  )}
+                </button>
+              )}
             </div>
           ) : activeTab === 'cppt' ? (
             <div className="flex items-center gap-4">
@@ -702,14 +823,379 @@ export default function PatientDetailPage() {
           </div>
         )}
 
+        {/* Initial Assessment Form - Show when form is active */}
+        {activeTab === 'assessment' && showAssessmentForm && (
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-100">
+            <div className="p-6 border-b border-slate-100 bg-gradient-to-r from-green-50 to-emerald-50">
+              <h4 className="text-lg font-bold text-slate-900 mb-1">Buat Asesmen Awal Baru</h4>
+              <p className="text-slate-600 text-sm">Isi formulir asesmen awal dengan lengkap dan akurat</p>
+            </div>
+
+            {/* Anamnesis Section - Blue */}
+            <div className="p-6 border-b border-slate-100">
+              <h5 className="text-md font-bold text-blue-700 mb-4 flex items-center gap-2">
+                <div className="h-8 w-8 bg-blue-600 rounded-lg flex items-center justify-center">
+                  <Activity className="h-4 w-4 text-white" />
+                </div>
+                Anamnesis (Data Subjektif)
+              </h5>
+              <div className="space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">
+                      Keluhan Utama *
+                    </label>
+                    <input
+                      type="text"
+                      value={assessmentForm.chiefComplaint}
+                      onChange={(e) => setAssessmentForm({...assessmentForm, chiefComplaint: e.target.value})}
+                      placeholder="Keluhan utama pasien..."
+                      className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">
+                      Skala Nyeri
+                    </label>
+                    <input
+                      type="text"
+                      value={assessmentForm.painScale}
+                      onChange={(e) => setAssessmentForm({...assessmentForm, painScale: e.target.value})}
+                      placeholder="0-10"
+                      className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">
+                    Riwayat Penyakit Sekarang
+                  </label>
+                  <textarea
+                    value={assessmentForm.currentIllnessHistory}
+                    onChange={(e) => setAssessmentForm({...assessmentForm, currentIllnessHistory: e.target.value})}
+                    placeholder="Riwayat penyakit sekarang..."
+                    className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                    rows={3}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">
+                    Riwayat Penyakit Dahulu
+                  </label>
+                  <textarea
+                    value={assessmentForm.pastMedicalHistory}
+                    onChange={(e) => setAssessmentForm({...assessmentForm, pastMedicalHistory: e.target.value})}
+                    placeholder="Riwayat penyakit dahulu..."
+                    className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                    rows={2}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">
+                    Alergi
+                  </label>
+                  <textarea
+                    value={assessmentForm.allergies}
+                    onChange={(e) => setAssessmentForm({...assessmentForm, allergies: e.target.value})}
+                    placeholder="Alergi obat, makanan, dll..."
+                    className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                    rows={2}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Physical Exam Section - Green */}
+            <div className="p-6 border-b border-slate-100">
+              <h5 className="text-md font-bold text-green-700 mb-4 flex items-center gap-2">
+                <div className="h-8 w-8 bg-green-600 rounded-lg flex items-center justify-center">
+                  <Stethoscope className="h-4 w-4 text-white" />
+                </div>
+                Pemeriksaan Fisik (Data Objektif)
+              </h5>
+              <div className="space-y-4">
+                <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-2">Tekanan Darah</label>
+                    <input
+                      type="text"
+                      value={assessmentForm.bloodPressure}
+                      onChange={(e) => setAssessmentForm({...assessmentForm, bloodPressure: e.target.value})}
+                      placeholder="120/80"
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent text-center"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-2">Suhu (°C)</label>
+                    <input
+                      type="text"
+                      value={assessmentForm.temperature}
+                      onChange={(e) => setAssessmentForm({...assessmentForm, temperature: e.target.value})}
+                      placeholder="36.5"
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent text-center"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-2">Nadi</label>
+                    <input
+                      type="text"
+                      value={assessmentForm.pulse}
+                      onChange={(e) => setAssessmentForm({...assessmentForm, pulse: e.target.value})}
+                      placeholder="80"
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent text-center"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-2">RR</label>
+                    <input
+                      type="text"
+                      value={assessmentForm.respiration}
+                      onChange={(e) => setAssessmentForm({...assessmentForm, respiration: e.target.value})}
+                      placeholder="20"
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent text-center"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-700 mb-2">SpO2 (%)</label>
+                    <input
+                      type="text"
+                      value={assessmentForm.spO2}
+                      onChange={(e) => setAssessmentForm({...assessmentForm, spO2: e.target.value})}
+                      placeholder="98"
+                      className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent text-center"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">
+                    Pemeriksaan Head to Toe
+                  </label>
+                  <textarea
+                    value={assessmentForm.headToToeExam}
+                    onChange={(e) => setAssessmentForm({...assessmentForm, headToToeExam: e.target.value})}
+                    placeholder="Hasil pemeriksaan fisik head to toe..."
+                    className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-green-500 focus:border-transparent resize-none"
+                    rows={4}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Functional Screening Section - Yellow */}
+            <div className="p-6 border-b border-slate-100">
+              <h5 className="text-md font-bold text-yellow-700 mb-4 flex items-center gap-2">
+                <div className="h-8 w-8 bg-yellow-500 rounded-lg flex items-center justify-center">
+                  <AlertTriangle className="h-4 w-4 text-white" />
+                </div>
+                Skrining Fungsional & Risiko
+              </h5>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">
+                    Risiko Jatuh
+                  </label>
+                  <select
+                    value={assessmentForm.fallRisk}
+                    onChange={(e) => setAssessmentForm({...assessmentForm, fallRisk: e.target.value})}
+                    className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-yellow-500 focus:border-transparent"
+                  >
+                    <option value="">Pilih Risiko Jatuh</option>
+                    <option value="Rendah">Rendah</option>
+                    <option value="Sedang">Sedang</option>
+                    <option value="Tinggi">Tinggi</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">
+                    Status Nutrisi
+                  </label>
+                  <textarea
+                    value={assessmentForm.nutritionalStatus}
+                    onChange={(e) => setAssessmentForm({...assessmentForm, nutritionalStatus: e.target.value})}
+                    placeholder="Status nutrisi pasien..."
+                    className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-yellow-500 focus:border-transparent resize-none"
+                    rows={2}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">
+                    Asesmen Fungsional
+                  </label>
+                  <textarea
+                    value={assessmentForm.functionalAssessment}
+                    onChange={(e) => setAssessmentForm({...assessmentForm, functionalAssessment: e.target.value})}
+                    placeholder="Asesmen fungsional pasien..."
+                    className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-yellow-500 focus:border-transparent resize-none"
+                    rows={2}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Medical Assessment Section - Purple */}
+            <div className="p-6 border-b border-slate-100">
+              <h5 className="text-md font-bold text-purple-700 mb-4 flex items-center gap-2">
+                <div className="h-8 w-8 bg-purple-600 rounded-lg flex items-center justify-center">
+                  <FileText className="h-4 w-4 text-white" />
+                </div>
+                Asesmen Medis & Keperawatan
+              </h5>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">
+                    Diagnosa Awal
+                  </label>
+                  <textarea
+                    value={assessmentForm.initialDiagnosis}
+                    onChange={(e) => setAssessmentForm({...assessmentForm, initialDiagnosis: e.target.value})}
+                    placeholder="Diagnosa awal..."
+                    className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
+                    rows={3}
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">
+                    Perencanaan Keperawatan
+                  </label>
+                  <textarea
+                    value={assessmentForm.nursingPlanning}
+                    onChange={(e) => setAssessmentForm({...assessmentForm, nursingPlanning: e.target.value})}
+                    placeholder="Perencanaan keperawatan..."
+                    className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none"
+                    rows={3}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Additional Specifics Section - Orange */}
+            <div className="p-6 border-b border-slate-100">
+              <h5 className="text-md font-bold text-orange-700 mb-4">Tambahan Spesifik</h5>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">
+                    Edukasi Pasien
+                  </label>
+                  <textarea
+                    value={assessmentForm.patientEducation}
+                    onChange={(e) => setAssessmentForm({...assessmentForm, patientEducation: e.target.value})}
+                    placeholder="Edukasi yang diberikan kepada pasien..."
+                    className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none"
+                    rows={2}
+                  />
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">
+                      Kebutuhan Komunikasi
+                    </label>
+                    <input
+                      type="text"
+                      value={assessmentForm.communicationNeeds}
+                      onChange={(e) => setAssessmentForm({...assessmentForm, communicationNeeds: e.target.value})}
+                      placeholder="Bahasa, alat bantu, dll..."
+                      className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold text-slate-700 mb-2">
+                      Kategori Triage
+                    </label>
+                    <select
+                      value={assessmentForm.triageCategory}
+                      onChange={(e) => setAssessmentForm({...assessmentForm, triageCategory: e.target.value})}
+                      className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent"
+                    >
+                      <option value="">Pilih Kategori Triage</option>
+                      <option value="Merah">Merah (Kritis)</option>
+                      <option value="Kuning">Kuning (Urgent)</option>
+                      <option value="Hijau">Hijau (Non-urgent)</option>
+                      <option value="Biru">Biru (Non-urgent</option>
+                    </select>
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">
+                    Riwayat Sosioekonomi
+                  </label>
+                  <textarea
+                    value={assessmentForm.socioeconomicHistory}
+                    onChange={(e) => setAssessmentForm({...assessmentForm, socioeconomicHistory: e.target.value})}
+                    placeholder="Riwayat socioekonomi pasien..."
+                    className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-orange-500 focus:border-transparent resize-none"
+                    rows={2}
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Form Actions */}
+            <div className="p-6 bg-slate-50 flex gap-3">
+              <button
+                onClick={handleSubmitAssessment}
+                disabled={isSubmittingAssessment}
+                className="flex-1 bg-gradient-to-r from-green-600 to-emerald-600 text-white py-3 rounded-xl font-semibold flex items-center justify-center gap-2 hover:shadow-lg transition-all disabled:opacity-50"
+              >
+                {isSubmittingAssessment ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-t-2 border-b-2 border-white"></div>
+                    Menyimpan...
+                  </>
+                ) : (
+                  <>
+                    <Save className="h-4 w-4" />
+                    Simpan Asesmen Awal
+                  </>
+                )}
+              </button>
+              <button
+                onClick={() => {
+                  setShowAssessmentForm(false)
+                  setAssessmentForm({
+                    chiefComplaint: "",
+                    painScale: "",
+                    currentIllnessHistory: "",
+                    pastMedicalHistory: "",
+                    allergies: "",
+                    bloodPressure: "",
+                    temperature: "",
+                    pulse: "",
+                    respiration: "",
+                    spO2: "",
+                    headToToeExam: "",
+                    fallRisk: "",
+                    nutritionalStatus: "",
+                    functionalAssessment: "",
+                    initialDiagnosis: "",
+                    nursingPlanning: "",
+                    patientEducation: "",
+                    communicationNeeds: "",
+                    socioeconomicHistory: "",
+                    triageCategory: "",
+                  })
+                }}
+                className="px-6 py-3 border border-slate-200 rounded-xl font-semibold text-slate-700 hover:bg-slate-50"
+              >
+                Batal
+              </button>
+            </div>
+          </div>
+        )}
+
         {/* Initial Assessment Display - Show when Assessment tab is active */}
-        {activeTab === 'assessment' && (
+        {activeTab === 'assessment' && !showAssessmentForm && (
           <div className="space-y-6">
             {!initialAssessment ? (
               <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-12 text-center">
                 <ClipboardList className="h-16 w-16 text-slate-300 mx-auto mb-4" />
                 <p className="text-slate-600 font-medium">Belum ada asesmen awal</p>
-                <p className="text-slate-500 text-sm mt-1">Asesmen awal pasien belum diisi oleh perawat</p>
+                <p className="text-slate-500 text-sm mt-1">
+                  {(user?.role === "PERAWAT" || user?.role === "BIDAN")
+                    ? "Klik tombol 'Buat Asesmen Awal' untuk membuat asesmen awal pasien"
+                    : "Asesmen awal pasien belum diisi oleh perawat"
+                  }
+                </p>
               </div>
             ) : (
               <>
