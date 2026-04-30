@@ -15,10 +15,20 @@ export class InitialAssessmentService {
       throw new NotFoundException('Patient not found');
     }
 
-    // Create or update patient with initial assessment data
-    const assessment = await this.prisma.patient.update({
-      where: { id: patientId },
+    // Check if assessment already exists
+    const existingAssessment = await this.prisma.initialAssessment.findUnique({
+      where: { patientId },
+    });
+
+    if (existingAssessment) {
+      throw new BadRequestException('Initial assessment already exists for this patient');
+    }
+
+    // Create initial assessment
+    const assessment = await this.prisma.initialAssessment.create({
       data: {
+        patientId,
+        nurseId,
         // Anamnesis (Data Subjektif)
         chiefComplaint: assessmentData.chiefComplaint || null,
         painScale: assessmentData.painScale || null,
@@ -51,40 +61,23 @@ export class InitialAssessmentService {
         // Triage
         triageCategory: assessmentData.triageCategory || null,
       },
-      select: {
-        id: true,
-        medicalRecordNumber: true,
-        name: true,
-        // All assessment fields
-        chiefComplaint: true,
-        painScale: true,
-        currentIllnessHistory: true,
-        pastMedicalHistory: true,
-        allergies: true,
-        bloodPressure: true,
-        temperature: true,
-        pulse: true,
-        respiration: true,
-        spO2: true,
-        headToToeExam: true,
-        fallRisk: true,
-        nutritionalStatus: true,
-        functionalAssessment: true,
-        initialDiagnosis: true,
-        nursingPlanning: true,
-        patientEducation: true,
-        communicationNeeds: true,
-        socioeconomicHistory: true,
-        triageCategory: true,
-        createdAt: true,
-        updatedAt: true,
-        doctor: {
+      include: {
+        patient: {
           select: {
             id: true,
+            medicalRecordNumber: true,
             name: true,
-            username: true,
-            role: true,
-            specialization: true,
+            birthDate: true,
+            gender: true,
+            doctor: {
+              select: {
+                id: true,
+                name: true,
+                username: true,
+                role: true,
+                specialization: true,
+              },
+            },
           },
         },
         nurse: {
@@ -103,38 +96,28 @@ export class InitialAssessmentService {
   }
 
   async getPatientAssessment(patientId: string) {
-    const assessment = await this.prisma.patient.findUnique({
-      where: { id: patientId },
-      select: {
-        id: true,
-        medicalRecordNumber: true,
-        name: true,
-        birthDate: true,
-        gender: true,
-        // All assessment fields
-        chiefComplaint: true,
-        painScale: true,
-        currentIllnessHistory: true,
-        pastMedicalHistory: true,
-        allergies: true,
-        bloodPressure: true,
-        temperature: true,
-        pulse: true,
-        respiration: true,
-        spO2: true,
-        headToToeExam: true,
-        fallRisk: true,
-        nutritionalStatus: true,
-        functionalAssessment: true,
-        initialDiagnosis: true,
-        nursingPlanning: true,
-        patientEducation: true,
-        communicationNeeds: true,
-        socioeconomicHistory: true,
-        triageCategory: true,
-        createdAt: true,
-        updatedAt: true,
-        doctor: {
+    const assessment = await this.prisma.initialAssessment.findUnique({
+      where: { patientId },
+      include: {
+        patient: {
+          select: {
+            id: true,
+            medicalRecordNumber: true,
+            name: true,
+            birthDate: true,
+            gender: true,
+            doctor: {
+              select: {
+                id: true,
+                name: true,
+                username: true,
+                role: true,
+                specialization: true,
+              },
+            },
+          },
+        },
+        nurse: {
           select: {
             id: true,
             name: true,
@@ -147,33 +130,30 @@ export class InitialAssessmentService {
     });
 
     if (!assessment) {
-      throw new NotFoundException('Patient not found');
+      throw new NotFoundException('Initial assessment not found');
     }
 
     return assessment;
   }
 
   async getAssessmentsByNurse(nurseId: string) {
-    return this.prisma.patient.findMany({
+    return this.prisma.initialAssessment.findMany({
       where: {
-        // Assuming we might want to track who created assessments
-        // For now, get all patients with assessments
-        chiefComplaint: { not: null },
+        nurseId,
       },
-      select: {
-        id: true,
-        medicalRecordNumber: true,
-        name: true,
-        chiefComplaint: true,
-        triageCategory: true,
-        initialDiagnosis: true,
-        createdAt: true,
-        updatedAt: true,
-        doctor: {
+      include: {
+        patient: {
           select: {
             id: true,
+            medicalRecordNumber: true,
             name: true,
-            specialization: true,
+            doctor: {
+              select: {
+                id: true,
+                name: true,
+                specialization: true,
+              },
+            },
           },
         },
       },
@@ -184,20 +164,24 @@ export class InitialAssessmentService {
   }
 
   async updateAssessmentByDoctor(patientId: string, doctorData: any, doctorId: string) {
-    const patient = await this.prisma.patient.findUnique({
-      where: { id: patientId },
+    const assessment = await this.prisma.initialAssessment.findUnique({
+      where: { patientId },
       include: {
-        doctor: true,
+        patient: {
+          include: {
+            doctor: true,
+          },
+        },
       },
     });
 
-    if (!patient) {
-      throw new NotFoundException('Patient not found');
+    if (!assessment) {
+      throw new NotFoundException('Initial assessment not found');
     }
 
     // Update assessment with doctor's notes/review
-    const updated = await this.prisma.patient.update({
-      where: { id: patientId },
+    const updated = await this.prisma.initialAssessment.update({
+      where: { patientId },
       data: {
         // Add doctor's review notes
         doctorNotes: doctorData.doctorNotes || null,
@@ -206,34 +190,28 @@ export class InitialAssessmentService {
         // Or update other fields as needed
         ...(doctorData.nursingPlanning && { nursingPlanning: doctorData.nursingPlanning }),
       },
-      select: {
-        id: true,
-        medicalRecordNumber: true,
-        name: true,
-        // All assessment fields
-        chiefComplaint: true,
-        painScale: true,
-        currentIllnessHistory: true,
-        pastMedicalHistory: true,
-        allergies: true,
-        bloodPressure: true,
-        temperature: true,
-        pulse: true,
-        respiration: true,
-        spO2: true,
-        headToToeExam: true,
-        fallRisk: true,
-        nutritionalStatus: true,
-        functionalAssessment: true,
-        initialDiagnosis: true,
-        nursingPlanning: true,
-        patientEducation: true,
-        communicationNeeds: true,
-        socioeconomicHistory: true,
-        triageCategory: true,
-        doctorNotes: true,
-        createdAt: true,
-        updatedAt: true,
+      include: {
+        patient: {
+          select: {
+            id: true,
+            medicalRecordNumber: true,
+            name: true,
+            doctor: {
+              select: {
+                id: true,
+                name: true,
+                specialization: true,
+              },
+            },
+          },
+        },
+        nurse: {
+          select: {
+            id: true,
+            name: true,
+            role: true,
+          },
+        },
       },
     });
 

@@ -30,10 +30,11 @@ model User {
   sip            String? @unique
   phone          String?
 
-  cpptEntries   Cppt[]          @relation("AuthorRelation")
-  verifiedCppts Cppt[]          @relation("VerifierRelation")
-  resumes       MedicalResume[]
-  patients      Patient[]
+  cpptEntries        Cppt[]                @relation("AuthorRelation")
+  verifiedCppts      Cppt[]                @relation("VerifierRelation")
+  resumes            MedicalResume[]
+  patients           Patient[]
+  initialAssessments InitialAssessment[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -51,7 +52,23 @@ model Patient {
   doctorId   String?
   doctor     User?    @relation(fields: [doctorId], references: [id], onDelete: SetNull)
 
-  // Comprehensive Initial Assessment Fields
+  visits      Visit[]
+  cpptEntries Cppt[]
+  resumes     MedicalResume[]
+  initialAssessment InitialAssessment?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model InitialAssessment {
+  id        String   @id @default(cuid())
+  patientId String   @unique
+  patient   Patient  @relation(fields: [patientId], references: [id], onDelete: Cascade)
+
+  nurseId String?
+  nurse   User?    @relation(fields: [nurseId], references: [id], onDelete: SetNull)
+
   // Anamnesis (Data Subjektif)
   chiefComplaint           String?
   painScale               String?
@@ -84,10 +101,6 @@ model Patient {
 
   // Triage
   triageCategory          String?
-
-  visits      Visit[]
-  cpptEntries Cppt[]
-  resumes     MedicalResume[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt

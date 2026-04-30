@@ -153,7 +153,10 @@ export default function PatientDetailPage() {
         setInitialAssessment(assessmentResponse)
       } catch (err: any) {
         // Assessment might not exist yet, that's okay
-        console.log("No initial assessment found")
+        if (err.response?.status !== 404) {
+          console.error("Error fetching assessment:", err)
+        }
+        setInitialAssessment(null)
       }
 
     } catch (err: any) {
@@ -710,6 +713,20 @@ export default function PatientDetailPage() {
               </div>
             ) : (
               <>
+                {/* Assessment Info Header */}
+                <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm text-slate-600">Dibuat oleh</p>
+                      <p className="font-semibold text-slate-900">{initialAssessment.nurse?.name || 'N/A'}</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-sm text-slate-600">Tanggal</p>
+                      <p className="font-semibold text-slate-900">{new Date(initialAssessment.createdAt).toLocaleDateString('id-ID')}</p>
+                    </div>
+                  </div>
+                </div>
+
                 {/* Anamnesis Section - Blue */}
                 <div className="bg-white rounded-2xl shadow-sm border border-blue-200 overflow-hidden">
                   <div className="bg-gradient-to-r from-blue-600 to-blue-700 px-6 py-4">

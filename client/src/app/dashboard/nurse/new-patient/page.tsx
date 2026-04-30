@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react"
 import { useRouter } from "next/navigation"
 import { patientService } from "@/services/patient.service"
+import { initialAssessmentService } from "@/services/initial-assessment.service"
 import NurseLayout from "@/components/dashboard/nurse-layout"
 import api from "@/lib/axios"
 import { ArrowLeft, Save, User, Phone, Calendar, MapPin, Stethoscope } from "lucide-react"
@@ -101,7 +102,44 @@ export default function NewPatientPage() {
       setIsLoading(true)
       setError(null)
 
-      await patientService.createPatient(formData)
+      // Step 1: Create patient with basic information only
+      const patientData = {
+        medicalRecordNumber: formData.medicalRecordNumber,
+        name: formData.name,
+        birthDate: formData.birthDate,
+        gender: formData.gender,
+        phone: formData.phone || null,
+        address: formData.address || null,
+        doctorId: formData.doctorId || null,
+      }
+
+      const newPatient = await patientService.createPatient(patientData)
+
+      // Step 2: Create initial assessment separately
+      const assessmentData = {
+        chiefComplaint: formData.chiefComplaint || null,
+        painScale: formData.painScale || null,
+        currentIllnessHistory: formData.currentIllnessHistory || null,
+        pastMedicalHistory: formData.pastMedicalHistory || null,
+        allergies: formData.allergies || null,
+        bloodPressure: formData.bloodPressure || null,
+        temperature: formData.temperature || null,
+        pulse: formData.pulse || null,
+        respiration: formData.respiration || null,
+        spO2: formData.spO2 || null,
+        headToToeExam: formData.headToToeExam || null,
+        fallRisk: formData.fallRisk || null,
+        nutritionalStatus: formData.nutritionalStatus || null,
+        functionalAssessment: formData.functionalAssessment || null,
+        initialDiagnosis: formData.initialDiagnosis || null,
+        nursingPlanning: formData.nursingPlanning || null,
+        patientEducation: formData.patientEducation || null,
+        communicationNeeds: formData.communicationNeeds || null,
+        socioeconomicHistory: formData.socioeconomicHistory || null,
+        triageCategory: formData.triageCategory || null,
+      }
+
+      await initialAssessmentService.createInitialAssessment(newPatient.id, assessmentData)
 
       // Redirect to nurse dashboard
       router.push("/dashboard/nurse")
