@@ -41,11 +41,23 @@ export function RegisterForm() {
       return;
     }
 
+    // Bersihkan data - ubah string kosong menjadi NULL untuk role non-DOKTER
+    const cleanedData = {
+      name: formData.name || null,
+      username: formData.username || null,
+      password: formData.password || null,
+      role: formData.role,
+      // Untuk non-DOKTER, specialization dan sip jadi NULL
+      specialization: formData.role === "DOKTER" ? (formData.specialization || null) : null,
+      sip: formData.role === "DOKTER" ? (formData.sip || null) : null,
+      phone: formData.phone || null
+    };
+
     // DEBUG: Melihat data yang dikirim dari FE ke BE di Console Browser
-    console.log("Payload FE yang dikirim:", JSON.stringify(formData, null, 2));
+    console.log("Payload FE yang dikirim:", JSON.stringify(cleanedData, null, 2));
 
     try {
-      await register(formData);
+      await register(cleanedData);
       alert("Registrasi Berhasil! Silakan login dengan akun Anda.");
       router.push("/login");
     } catch (err) {

@@ -132,12 +132,12 @@ export function LoginForm() {
           <div className="w-20 h-20 bg-white/10 rounded-3xl flex items-center justify-center mx-auto backdrop-blur-sm border border-white/20 shadow-xl">
             <Lock className="h-10 w-10 text-white" />
           </div>
-          <p className="text-2xl font-light italic leading-relaxed tracking-wide">&quot;Teknologi hanyalah alat. Dalam hal membuat orang bekerja sama, guru adalah yang terpenting.&quot;</p>
+          <p className="text-2xl font-light italic leading-relaxed tracking-wide">&quot;Bebek Berkicau Bunyi nya AUUU Login lah&quot;</p>
           <div className="pt-5 border-t border-white/20 inline-block">
-            <p className="text-sm font-black tracking-widest uppercase text-blue-200">— Bill Gates</p>
+            <p className="text-sm font-black tracking-widest uppercase text-blue-200">— Coba Aja</p>
           </div>
         </div>
       </div>
     </div>
   );
-}
+} 
